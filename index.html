@@ -152,13 +152,13 @@ async function updateAccount() {
     loginForm.hidden = false;
     return;
   }
-
   document.getElementById("cc-user").textContent =
-    "Signed in as " + data.user.email;
+      "Signed in as " + data.user.email;
 
-  account.hidden = false;
-  signupForm.hidden = true;
-  loginForm.hidden = true;
+    account.hidden = false;
+    signupForm.hidden = true;
+    loginForm.hidden = true;
+  }
 
   // Check this user's paid-access record in Supabase.
   const { data: accessRecord, error: accessError } =
@@ -192,13 +192,6 @@ if (!accessRecord) {
   }
 }
 
-    document.getElementById("cc-user").textContent =
-      "Signed in as " + data.user.email;
-
-    account.hidden = false;
-    signupForm.hidden = true;
-    loginForm.hidden = true;
-  }
 
   signupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
