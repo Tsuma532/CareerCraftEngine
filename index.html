@@ -11,7 +11,7 @@
 <body>
 <header><small>Career documents · Smart application workspace</small><h1>CareerCraft Pro</h1><p>Upload your CV, paste a job or scholarship advert or provide its URL, and prepare targeted application documents and draft answers to application questions.</p></header>
 <nav><button class="alt" onclick="go('cvSection')">1 · Upload CV</button><button class="alt" onclick="go('opportunity')">2 · Opportunity</button><button class="alt" onclick="go('documents')">3 · Documents</button><button class="alt" onclick="go('questions')">4 · Application questions</button><button class="alt" onclick="go('help')">Help & privacy</button></nav>
-<main>
+<main id="cc-paid-workspace" hidden>
 <aside class="side"><h3>Your application workspace</h3><p>One CV, many tailored applications. Keep the original and create a separate set of drafts for every opportunity.</p><div class="step"><b>1. Upload CV</b><br><small>DOCX, PDF, TXT or text-based files.</small></div><div class="step"><b>2. Add the opportunity</b><br><small>Paste requirements or enter a link.</small></div><div class="step"><b>3. Create documents</b><br><small>Letters, statements and tailored CV draft.</small></div><div class="step"><b>4. Prepare answers</b><br><small>Paste application questions for draft responses.</small></div><div class="callout warn"><b>Prototype limits:</b> this standalone file does not have a connected AI service or website-reading backend. URL content may be blocked by login or website security. Use the AI prompt feature for deeper analysis.</div><p id="savedStatus" class="status">No CV loaded yet.</p><button class="alt" onclick="exportCV()">Export extracted CV</button> <button class="alt" onclick="clearCV()">Clear CV</button></aside>
 <section>
 <div id="cvSection" class="panel"><div class="kicker">Step 1</div><h2>Upload your existing CV</h2><p class="muted">Choose a CV file instead of typing everything out. For best results, use a text-based PDF or DOCX, not a scanned image.</p><div class="drop"><div style="font-size:2rem">📄</div><b>Select your CV file</b><p class="muted">Supported: .docx, .pdf, .txt</p><input type="file" id="cvFile" accept=".docx,.pdf,.txt,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><p id="fileName" class="filename">No file selected</p><p class="muted tiny">DOCX and PDF text extraction uses browser libraries loaded from a CDN, so an internet connection may be needed.</p></div><div class="field"><label for="cvText">Extracted CV text (review and correct it)</label><textarea id="cvText" placeholder="After uploading, extracted text appears here. You can correct it if the file layout was not read perfectly."></textarea></div><div class="row"><div class="field"><label for="fullName">Your name (optional)</label><input id="fullName" placeholder="Your name"></div><div class="field"><label for="careerField">Target field (optional)</label><input id="careerField" placeholder="e.g. finance, public health"></div></div><div class="actions"><button onclick="saveCV()">Save CV on this device</button><button class="alt" onclick="go('opportunity')">Next: opportunity →</button></div><p id="cvStatus" class="status"></p></div>
@@ -135,15 +135,53 @@ loadCV();
     message.textContent = text;
   }
 
-  async function updateAccount() {
-    const { data, error } = await client.auth.getUser();
+async function updateAccount() {
+  const workspace = document.getElementById("cc-paid-workspace");
 
-    if (error || !data.user) {
-      account.hidden = true;
-      signupForm.hidden = false;
-      loginForm.hidden = false;
-      return;
-    }
+  // Keep the paid workspace hidden until access is verified.
+  workspace.hidden = true;
+
+  const { data, error } = await client.auth.getUser();
+
+  if (error || !data.user) {
+    account.hidden = true;
+    signupForm.hidden = false;
+    loginForm.hidden = false;
+    return;
+  }
+
+  document.getElementById("cc-user").textContent =
+    "Signed in as " + data.user.email;
+
+  account.hidden = false;
+  signupForm.hidden = true;
+  loginForm.hidden = true;
+
+  // Check this user's paid-access record in Supabase.
+  const { data: accessRecord, error: accessError } =
+    await client
+      .from("careercraft_access")
+      .select("access_granted")
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+
+  if (accessError) {
+    showMessage(
+      "We couldn't verify your access. Please refresh and try again."
+    );
+    return;
+  }
+
+  if (accessRecord?.access_granted === true) {
+    workspace.hidden = false;
+    showMessage("Your CareerCraft Pro lifetime access is active.");
+  } else {
+    showMessage(
+      "You are signed in, but paid access is not active yet. " +
+      "Please purchase CareerCraft Pro and use the same email address."
+    );
+  }
+}
 
     document.getElementById("cc-user").textContent =
       "Signed in as " + data.user.email;
