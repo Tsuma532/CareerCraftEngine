@@ -62,17 +62,16 @@ loadCV();
 </script>
 <!-- CareerCraft Pro: Login and Registration -->
 <section id="cc-auth" style="max-width:420px;margin:40px auto;padding:24px;border:1px solid #ddd;border-radius:14px;font-family:Arial,sans-serif;">
-  <h2>CareerCraft Pro</h2>
+  <h2>CareerCraft Pro Account</h2>
   <p>Create an account or sign in to continue.</p>
 
   <form id="cc-signup">
     <h3>Create account</h3>
-    <label>Email address</label>
-    <input id="cc-new-email" type="email" required
-      autocomplete="email"
+    <label for="cc-new-email">Email address</label>
+    <input id="cc-new-email" type="email" required autocomplete="email"
       style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 14px;">
 
-    <label>Password (at least 8 characters)</label>
+    <label for="cc-new-password">Password (at least 8 characters)</label>
     <input id="cc-new-password" type="password" required minlength="8"
       autocomplete="new-password"
       style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 14px;">
@@ -84,14 +83,12 @@ loadCV();
 
   <form id="cc-login">
     <h3>Already registered?</h3>
-    <label>Email address</label>
-    <input id="cc-login-email" type="email" required
-      autocomplete="email"
+    <label for="cc-login-email">Email address</label>
+    <input id="cc-login-email" type="email" required autocomplete="email"
       style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 14px;">
 
-    <label>Password</label>
-    <input id="cc-login-password" type="password" required
-      autocomplete="current-password"
+    <label for="cc-login-password">Password</label>
+    <input id="cc-login-password" type="password" required autocomplete="current-password"
       style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 14px;">
 
     <button type="submit">Sign in</button>
@@ -108,21 +105,27 @@ loadCV();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (() => {
-  // Replace these two placeholders with your Supabase details.
   const SUPABASE_URL = "https://dmesnxhkgnkgcztcfebd.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_co5sWyY6WaURxWWWqsgD0A_JppKMlNc";
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_co5sWyY6WaURxWWWqsgD0A_JppKMlNc";
 
-  const message = document.getElementById("cc-message");
-  const signupForm = document.getElementById("cc-signup");
-  const loginForm = document.getElementById("cc-login");
-  const account = document.getElementById("cc-account");
+  const $ = (id) => document.getElementById(id);
+  const workspace = $("cc-paid-workspace");
+  const message = $("cc-message");
+  const signupForm = $("cc-signup");
+  const loginForm = $("cc-login");
+  const account = $("cc-account");
+  const logoutButton = $("cc-logout");
 
-  if (
-    SUPABASE_URL.includes("PASTE_") ||
-    SUPABASE_PUBLISHABLE_KEY.includes("PASTE_")
-  ) {
-    message.textContent =
-      "Setup needed: add your Supabase Project URL and publishable key.";
+  function showMessage(text) {
+    message.textContent = text;
+  }
+
+  // Never show the paid workspace before checking access.
+  workspace.hidden = true;
+
+  if (!window.supabase) {
+    showMessage("Login service failed to load. Check your internet connection and refresh.");
     return;
   }
 
@@ -131,81 +134,84 @@ loadCV();
     SUPABASE_PUBLISHABLE_KEY
   );
 
-  const websiteURL =
-    "https://tsuma532.github.io/CareerCraftEngine/";
+  const websiteURL = "https://tsuma532.github.io/CareerCraftEngine/";
+  let checkingAccess = false;
 
-  function showMessage(text) {
-    message.textContent = text;
+  async function updateAccount() {
+    if (checkingAccess) return;
+    checkingAccess = true;
+    workspace.hidden = true;
+
+    try {
+      const { data, error } = await client.auth.getUser();
+
+      if (error) throw error;
+
+      const user = data.user;
+
+      if (!user) {
+        account.hidden = true;
+        signupForm.hidden = false;
+        loginForm.hidden = false;
+        showMessage("Please sign in to check your CareerCraft Pro access.");
+        return;
+      }
+
+      $("cc-user").textContent = "Signed in as " + user.email;
+      account.hidden = false;
+      signupForm.hidden = true;
+      loginForm.hidden = true;
+      showMessage("Checking your access...");
+
+      const { data: accessRecord, error: accessError } = await client
+        .from("careercraft_access")
+        .select("access_granted")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (accessError) {
+        showMessage("Access check failed: " + accessError.message);
+        return;
+      }
+
+      if (!accessRecord) {
+        showMessage(
+          "Your account is signed in, but no access record exists yet. " +
+          "Check that your purchase was registered against this account."
+        );
+        return;
+      }
+
+      if (accessRecord.access_granted === true) {
+        workspace.hidden = false;
+        showMessage("Your CareerCraft Pro access is active.");
+      } else {
+        showMessage(
+          "You are signed in, but paid access is not active yet. " +
+          "Please check your purchase and use the same email address."
+        );
+      }
+    } catch (error) {
+      showMessage(
+        "Could not check your account: " +
+        (error.message || "Please refresh and try again.")
+      );
+    } finally {
+      checkingAccess = false;
+    }
   }
-
-async function updateAccount() {
-  const workspace = document.getElementById("cc-paid-workspace");
-
-  // Keep the paid workspace hidden until access is verified.
-  workspace.hidden = true;
-
-  const { data, error } = await client.auth.getUser();
-
-  if (error || !data.user) {
-    account.hidden = true;
-    signupForm.hidden = false;
-    loginForm.hidden = false;
-    return;
-  }
-  document.getElementById("cc-user").textContent =
-      "Signed in as " + data.user.email;
-
-    account.hidden = false;
-    signupForm.hidden = true;
-    loginForm.hidden = true;
-  }
-
-  // Check this user's paid-access record in Supabase.
-  const { data: accessRecord, error: accessError } =
-    await client
-      .from("careercraft_access")
-      .select("access_granted")
-      .eq("user_id", data.user.id)
-      .maybeSingle();
-
-  
-if (accessError) {
-  showMessage(
-    "Access check failed: " + accessError.message
-  );
-  return;
-}
-
-if (!accessRecord) {
-  showMessage("No access record found for this account.");
-  return;
-}
-
-  if (accessRecord?.access_granted === true) {
-    workspace.hidden = false;
-    showMessage("Your CareerCraft Pro lifetime access is active.");
-  } else {
-    showMessage(
-      "You are signed in, but paid access is not active yet. " +
-      "Please purchase CareerCraft Pro and use the same email address."
-    );
-  }
-}
-
 
   signupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     showMessage("Creating your account...");
 
-    const email = document.getElementById("cc-new-email").value.trim();
-    const password = document.getElementById("cc-new-password").value;
+    const email = $("cc-new-email").value.trim();
+    const password = $("cc-new-password").value;
 
     const { data, error } = await client.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: websiteURL
-      }
+      options: { emailRedirectTo: websiteURL }
     });
 
     if (error) {
@@ -215,10 +221,11 @@ if (!accessRecord) {
 
     if (!data.session) {
       showMessage(
-        "Account request received. Check your email to confirm registration, then sign in."
+        "Account created or requested. Check your email to confirm it, " +
+        "then sign in here."
       );
     } else {
-      showMessage("Account created successfully.");
+      showMessage("Account created. Checking access...");
       await updateAccount();
     }
   });
@@ -227,12 +234,9 @@ if (!accessRecord) {
     event.preventDefault();
     showMessage("Signing in...");
 
-    const email = document.getElementById("cc-login-email").value.trim();
-    const password = document.getElementById("cc-login-password").value;
-
     const { error } = await client.auth.signInWithPassword({
-      email,
-      password
+      email: $("cc-login-email").value.trim(),
+      password: $("cc-login-password").value
     });
 
     if (error) {
@@ -240,26 +244,30 @@ if (!accessRecord) {
       return;
     }
 
-    showMessage("You are signed in.");
     await updateAccount();
   });
 
-  document.getElementById("cc-logout").addEventListener("click", async () => {
+  logoutButton.addEventListener("click", async () => {
+    workspace.hidden = true;
     const { error } = await client.auth.signOut();
 
     if (error) {
-      showMessage(error.message);
+      showMessage("Sign-out failed: " + error.message);
       return;
     }
 
-    showMessage("You have signed out.");
     await updateAccount();
   });
 
   client.auth.onAuthStateChange(() => {
-    updateAccount();
+    // Run after the auth callback completes.
+    window.setTimeout(() => {
+      updateAccount();
+    }, 0);
   });
 
   updateAccount();
 })();
-</script></body></html>
+</script>
+</body>
+</html>
