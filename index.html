@@ -168,12 +168,18 @@ async function updateAccount() {
       .eq("user_id", data.user.id)
       .maybeSingle();
 
-  if (accessError) {
-    showMessage(
-      "We couldn't verify your access. Please refresh and try again."
-    );
-    return;
-  }
+  
+if (accessError) {
+  showMessage(
+    "Access check failed: " + accessError.message
+  );
+  return;
+}
+
+if (!accessRecord) {
+  showMessage("No access record found for this account.");
+  return;
+}
 
   if (accessRecord?.access_granted === true) {
     workspace.hidden = false;
