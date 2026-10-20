@@ -56,7 +56,9 @@ function downloadDoc(){let n=($('docName').value||'application-document').toLowe
 function copyAnswers(){if(!$('answers').value.trim())return alert('Prepare the worksheet first.');navigator.clipboard?.writeText($('answers').value).then(()=>$('questionStatus').textContent='Copied.').catch(()=>{$('answers').select();document.execCommand('copy')})}
 function downloadAnswers(){if(!$('answers').value.trim())return alert('Prepare the worksheet first.');downloadText('application-answers.txt',$('answers').value)}
 loadCV();
-</script><section id="cc-auth" style="max-width:420px;margin:40px auto;padding:24px;border:1px solid #ddd;border-radius:14px;font-family:Arial,sans-serif;">
+</script>
+<!-- CareerCraft Pro: Login and Registration -->
+<section id="cc-auth" style="max-width:420px;margin:40px auto;padding:24px;border:1px solid #ddd;border-radius:14px;font-family:Arial,sans-serif;">
   <h2>CareerCraft Pro</h2>
   <p>Create an account or sign in to continue.</p>
 
@@ -219,140 +221,5 @@ loadCV();
   });
 
   updateAccount();
-})();
-</script>
-<section id="cc-auth" style="max-width:420px;margin:40px auto;padding:24px;border:1px solid #ddd;border-radius:12px;font-family:Arial,sans-serif;">
-  <h2>CareerCraft Pro</h2>
-  <p>Create an account or sign in.</p>
-
-  <form id="cc-signup">
-    <h3>Create account</h3>
-    <input id="cc-new-email" type="email" placeholder="Email address" required
-      style="box-sizing:border-box;width:100%;padding:12px;margin:8px 0;">
-    <input id="cc-new-password" type="password" placeholder="Password (8+ characters)"
-      minlength="8" required
-      style="box-sizing:border-box;width:100%;padding:12px;margin:8px 0;">
-    <button type="submit">Create account</button>
-  </form>
-
-  <hr>
-
-  <form id="cc-login">
-    <h3>Already registered?</h3>
-    <input id="cc-login-email" type="email" placeholder="Email address" required
-      style="box-sizing:border-box;width:100%;padding:12px;margin:8px 0;">
-    <input id="cc-login-password" type="password" placeholder="Password" required
-      style="box-sizing:border-box;width:100%;padding:12px;margin:8px 0;">
-    <button type="submit">Sign in</button>
-  </form>
-
-  <div id="cc-account" hidden>
-    <p id="cc-user"></p>
-    <button id="cc-logout" type="button">Sign out</button>
-  </div>
-
-  <p id="cc-message" role="status" aria-live="polite"></p>
-</section>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-(() => {
-  const SUPABASE_URL = "https://dmesnxhkgnkgcztcfebd.supabase.co/rest/v1/";
-  const SUPABASE_KEY = "sb_publishable_co5sWyY6WaURxWWWqsgD0A_JppKMlNc";
-
-  const message = document.getElementById("cc-message");
-  const signup = document.getElementById("cc-signup");
-  const login = document.getElementById("cc-login");
-  const account = document.getElementById("cc-account");
-
-  if (SUPABASE_URL.includes("PASTE_") ||
-      SUPABASE_KEY.includes("PASTE_")) {
-    message.textContent = "Please add your Supabase connection details.";
-    return;
-  }
-
-  if (!window.supabase) {
-    message.textContent = "Login library failed to load. Refresh and try again.";
-    return;
-  }
-
-  const client = window.supabase.createClient(
-    SUPABASE_URL, SUPABASE_KEY
-  );
-
-  function say(text) {
-    message.textContent = text;
-  }
-
-  async function refreshAccount() {
-    const { data, error } = await client.auth.getUser();
-
-    if (error || !data.user) {
-      account.hidden = true;
-      signup.hidden = false;
-      login.hidden = false;
-      return;
-    }
-
-    document.getElementById("cc-user").textContent =
-      "Signed in as " + data.user.email;
-
-    account.hidden = false;
-    signup.hidden = true;
-    login.hidden = true;
-  }
-
-  signup.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    say("Creating account...");
-
-    const { error } = await client.auth.signUp({
-      email: document.getElementById("cc-new-email").value.trim(),
-      password: document.getElementById("cc-new-password").value,
-      options: {
-        emailRedirectTo: "https://tsuma532.github.io/CareerCraftEngine/"
-      }
-    });
-
-    if (error) {
-      say(error.message);
-      return;
-    }
-
-    say("Registration submitted. Check your email if confirmation is required.");
-    await refreshAccount();
-  });
-
-  login.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    say("Signing in...");
-
-    const { error } = await client.auth.signInWithPassword({
-      email: document.getElementById("cc-login-email").value.trim(),
-      password: document.getElementById("cc-login-password").value
-    });
-
-    if (error) {
-      say(error.message);
-      return;
-    }
-
-    say("Signed in successfully.");
-    await refreshAccount();
-  });
-
-  document.getElementById("cc-logout").addEventListener("click", async () => {
-    const { error } = await client.auth.signOut();
-
-    if (error) {
-      say(error.message);
-      return;
-    }
-
-    say("Signed out.");
-    await refreshAccount();
-  });
-
-  refreshAccount();
 })();
 </script></body></html>
