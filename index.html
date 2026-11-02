@@ -129,7 +129,6 @@ function runCVStructureAssessment() {
       error.message || 'Could not assess this CV.';
   }
 }
-
 function downloadCVStructureReport() {
   const report = $('cvStructureOutput').value.trim();
 
@@ -138,18 +137,46 @@ function downloadCVStructureReport() {
     return;
   }
 
-  const blob = new Blob([report], {
-    type: 'text/plain;charset=utf-8'
+  const { jsPDF } = window.jspdf;
+
+  if (!jsPDF) {
+    alert('PDF generator did not load. Please refresh the page.');
+    return;
+  }
+
+  const pdf = new jsPDF();
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 18;
+  const maxWidth = pageWidth - margin * 2;
+  const lines = pdf.splitTextToSize(report, maxWidth);
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+
+  let y = 20;
+
+  pdf.setFontSize(16);
+  pdf.text('CareerCraft Pro', margin, y);
+  y += 10;
+
+  pdf.setFontSize(12);
+  pdf.text('CV Structure & Quality Assessment', margin, y);
+  y += 10;
+
+  pdf.setFontSize(10);
+
+  lines.forEach(line => {
+    if (y > pageHeight - margin) {
+      pdf.addPage();
+      y = 20;
+    }
+
+    pdf.text(line, margin, y);
+    y += 6;
   });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-
-  link.href = url;
-  link.download = 'careercraft-cv-structure-report.txt';
-  link.click();
-
-  URL.revokeObjectURL(url);
+  pdf.save('CareerCraft-CV-Structure-Assessment.pdf');
 }
 loadCV();
 </script>
