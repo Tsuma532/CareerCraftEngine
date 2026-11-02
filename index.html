@@ -103,6 +103,54 @@ function downloadCVAnalysis() {
 
   downloadText('careercraft-cv-analysis.txt', report);
 }
+function runCVStructureAssessment() {
+  const cv = $('cvText').value.trim();
+
+  if (!cv) {
+    $('cvStructureStatus').textContent =
+      'Please upload or enter your CV first.';
+    return;
+  }
+
+  if (!window.CareerCraftStructure) {
+    $('cvStructureStatus').textContent =
+      'The CV structure engine did not load. Check the script link.';
+    return;
+  }
+
+  try {
+    const result = window.CareerCraftStructure.analyze(cv);
+
+    $('cvStructureOutput').value = result.report;
+    $('cvStructureStatus').textContent =
+      'Assessment completed. Review the findings carefully.';
+  } catch (error) {
+    $('cvStructureStatus').textContent =
+      error.message || 'Could not assess this CV.';
+  }
+}
+
+function downloadCVStructureReport() {
+  const report = $('cvStructureOutput').value.trim();
+
+  if (!report) {
+    alert('Please assess your CV first.');
+    return;
+  }
+
+  const blob = new Blob([report], {
+    type: 'text/plain;charset=utf-8'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = 'careercraft-cv-structure-report.txt';
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
 loadCV();
 </script>
 <!-- CareerCraft Pro: Login and Registration -->
