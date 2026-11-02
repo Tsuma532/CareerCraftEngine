@@ -59,6 +59,49 @@ function copyDoc(){if(!$('docOutput').value.trim())return alert('Generate a docu
 function downloadDoc(){let n=($('docName').value||'application-document').toLowerCase().replace(/[^a-z0-9]+/g,'-');downloadText((n||'application-document')+'.txt',$('docOutput').value)}
 function copyAnswers(){if(!$('answers').value.trim())return alert('Prepare the worksheet first.');navigator.clipboard?.writeText($('answers').value).then(()=>$('questionStatus').textContent='Copied.').catch(()=>{$('answers').select();document.execCommand('copy')})}
 function downloadAnswers(){if(!$('answers').value.trim())return alert('Prepare the worksheet first.');downloadText('application-answers.txt',$('answers').value)}
+function analyzeCVAgainstOpportunity() {
+  const cv = $('cvText').value.trim();
+  const requirements = $('requirements').value.trim();
+
+  if (!cv) {
+    $('cvAnalysisStatus').textContent =
+      'Please upload or enter your CV first.';
+    return;
+  }
+
+  if (!requirements) {
+    $('cvAnalysisStatus').textContent =
+      'Please paste the job or scholarship requirements first.';
+    return;
+  }
+
+  if (!window.CareerCraftCV) {
+    $('cvAnalysisStatus').textContent =
+      'The CV analysis engine did not load. Please check the script link.';
+    return;
+  }
+
+  try {
+    const result = window.CareerCraftCV.analyze(cv, requirements);
+
+    $('cvAnalysisOutput').value = result.report;
+    $('cvAnalysisStatus').textContent =
+      'Analysis completed. Review the evidence carefully.';
+  } catch (error) {
+    $('cvAnalysisStatus').textContent = error.message;
+  }
+}
+
+function downloadCVAnalysis() {
+  const report = $('cvAnalysisOutput').value.trim();
+
+  if (!report) {
+    alert('Please analyse your CV first.');
+    return;
+  }
+
+  downloadText('careercraft-cv-analysis.txt', report);
+}
 loadCV();
 </script>
 <!-- CareerCraft Pro: Login and Registration -->
