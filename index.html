@@ -42,10 +42,50 @@ button:disabled{
   font-weight: 700;
   border-top: 1px solid #e5e5e5;
 }
+/* Artistic Career Craft Pro header */
+header {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(120deg, #102b50, #24558a 55%, #142d4b);
+  color: white;
+  padding: 35px 25px;
+  border-radius: 16px;
+}
+
+header::before {
+  content: "📚     📄     📁     📖";
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 34px;
+  opacity: .22;
+  z-index: -1;
+}
+
+header::after {
+  content: "📑       📘       📂";
+  position: absolute;
+  bottom: 12px;
+  left: 20px;
+  font-size: 32px;
+  opacity: .18;
+  z-index: -1;
+}
+
+header h1 {
+  position: relative;
+  letter-spacing: normal;
+  word-spacing: .18em;
+  line-height: 1.4;
+  font-weight: 850;
+  color: white;
+}
 </style>
 </head>
 <body>
-<header><small>Career documents · Smart application workspace</small><h1>CareerCraft Pro</h1><p>Upload your CV, paste a job or scholarship advert or provide its URL, and prepare targeted application documents and draft answers to application questions.</p></header
+<header><small>Career documents · Smart application workspace</small><h1>Career&nbsp;Craft Pro</h1><p>Upload your CV, paste a job or scholarship advert or provide its URL, and prepare targeted application documents and draft answers to application questions.</p></header
 <nav>
 <button class="alt" onclick="go('cvSection')">1 · UPLOAD CV</button>
 <button class="alt" onclick="go('opportunity')">2 · OPPORTUNITY</button>
